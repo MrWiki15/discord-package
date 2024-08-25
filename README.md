@@ -84,6 +84,6 @@ Para iniciar el bot de Discord y el servidor web de monitorización:
 python dev.py
 ```
 
-Para mas informacion: [Documentacion]('https://docs.polarisweb3.org')
+Para mas informacion: [Documentacion](https://docs.polarisweb3.org)
 
 ![Polaris](https://cusoft.tech/wp-content/uploads/2024/05/P001.svg)
