@@ -1,0 +1,6 @@
+config.py
+build
+dist
+discord_package.egg-info
+.pypirc
+pyproject.toml
