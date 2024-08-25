@@ -17,27 +17,10 @@
 
 ## Instalación
 
-### 1. Clona el repositorio
+### 1. Instala discord-package
 
 ```bash
-git clone https://github.com/MrWiki15/discord-package.git
-cd discord-package
-```
-
-### 2. Instala el paquete
-
-Usa pip para instalar el paquete localmente:
-
-```bash
-pip install .
-```
-
-### 3. Instala las dependencias requeridas
-
-Asegúrate de instalar todas las dependencias necesarias listadas en `requirements.txt`:
-
-```bash
-pip install -r requirements.txt
+pip install discord-package
 ```
 
 ## Uso
@@ -100,3 +83,5 @@ Para iniciar el bot de Discord y el servidor web de monitorización:
 ```bash
 python dev.py
 ```
+
+![Polaris]("https://cusoft.tech/wp-content/uploads/2024/05/P001.svg")
