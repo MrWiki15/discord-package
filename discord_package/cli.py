@@ -414,6 +414,7 @@ rich
            
             # dev.py     
             ('', 'dev.py', """
+import signal
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from rich.console import Console
@@ -422,82 +423,134 @@ from rich import print
 import subprocess
 import time
 import os
-import threading  # Nuevo: Usaremos threading para manejar el temporizador de debounce
+import threading
+import hashlib
+import sys
 
 class ChangeHandler(FileSystemEventHandler):
-    def __init__(self, command):
+    def __init__(self, command, root_path):
         self.command = command
         self.process = None
-        self.last_modified = time.time()
         self.console = Console()
-        self.debounce_timer = None  # Nuevo: Temporizador de debounce
+        self.debounce_timer = None
+        self.root_path = root_path
+        self.last_hash = None
+
+    def calculate_directory_hash(self):
+        #Calcula un hash para todos los archivos `.py` en el proyecto.
+        hasher = hashlib.md5()
+        try:
+            for subdir, _, files in os.walk(self.root_path):
+                for file in files:
+                    if file.endswith(".py"):
+                        file_path = os.path.join(subdir, file)
+                        with open(file_path, 'rb') as f:
+                            buf = f.read()
+                            hasher.update(buf)
+            return hasher.hexdigest()
+        except Exception as e:
+            self.console.print(f"[bold red]Error calculating directory hash: {e}[/bold red]")
+            return None
 
     def on_modified(self, event):
-        # Filtrar solo los eventos de modificación de archivos relevantes.
+        # Se llama cuando se detecta un cambio en un archivo.
+        # Solo monitorear archivos Python
         if event.is_directory or not event.src_path.endswith('.py'):
             return
-        
+
         # Reiniciar el temporizador de debounce
         if self.debounce_timer:
             self.debounce_timer.cancel()
-        
-        # Configurar un nuevo temporizador de debounce
-        self.debounce_timer = threading.Timer(1, self.restart_process)  # Espera 1 segundo antes de reiniciar el proceso
+
+        # Usar debounce para reiniciar el proceso después de un corto periodo de inactividad
+        self.debounce_timer = threading.Timer(1, self.restart_if_needed)
         self.debounce_timer.start()
 
+    def restart_if_needed(self):
+        # Reinicia el proceso si el hash del proyecto ha cambiado.
+        current_hash = self.calculate_directory_hash()
+        if current_hash != self.last_hash:
+            self.last_hash = current_hash
+            self.restart_process()
+
     def start_process(self):
-        # Iniciar el proceso si no está ya corriendo
+        #Iniciar el proceso del bot.
         if not self.process or self.process.poll() is not None:
             self.console.print(f"[bold green]Running command:[/bold green] [italic yellow]{self.command}[/italic yellow]")
             with Progress() as progress:
                 task = progress.add_task("[cyan]Starting process...", total=100)
                 for i in range(100):
                     progress.update(task, advance=1)
-                    time.sleep(0.1)  # Esperar debido a la api de discord
-            self.process = subprocess.Popen(self.command, shell=True)
-            self.console.print("[bold green]Process started successfully![/bold green]")
+                    time.sleep(0.1)  # Simular carga
+
+            try:
+                # Ajustar para Windows y Unix
+                if os.name == 'nt':  # Windows
+                    self.process = subprocess.Popen(self.command, shell=True, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                else:  # Unix (Linux/macOS)
+                    self.process = subprocess.Popen(self.command, shell=True, preexec_fn=os.setsid)
+                self.console.print("[bold green]Process started successfully![/bold green]")
+            except Exception as e:
+                self.console.print(f"[bold red]Error starting process: {e}[/bold red]")
         else:
             self.console.print("[bold yellow]Process is already running.[/bold yellow]")
 
-    def restart_process(self):
-        # Detener el proceso si está corriendo
+    def stop_process(self):
+        # Detener el proceso enviando `SIGINT` (Ctrl+C).
         if self.process:
-            self.console.print("[bold red]Stopping the current process...[/bold red]")
-            self.process.terminate()
-            self.process.wait()
-            self.console.print("[bold red]Process stopped.[/bold red]")
+            self.console.print("[bold red]Stopping the current process with Ctrl+C...[/bold red]")
+            try:
+                # Enviar SIGINT (Ctrl+C) al grupo de procesos
+                if os.name == 'nt':  # Windows
+                    self.process.send_signal(signal.CTRL_BREAK_EVENT)
+                else:  # Unix (Linux/macOS)
+                    os.killpg(os.getpgid(self.process.pid), signal.SIGINT)
+                self.process.wait()  # Esperar a que el proceso termine
+                self.console.print("[bold red]Process stopped.[/bold red]")
+            except Exception as e:
+                self.console.print(f"[bold red]Error stopping process: {e}[/bold red]")
 
-        # Iniciar un nuevo proceso
-        self.start_process()
+    def restart_process(self):
+        # Reiniciar el proceso.
+        self.stop_process()  # Detener el proceso de manera controlada
+        self.start_process()  # Iniciar un nuevo proceso
+
+    def stop(self):
+        # Detener el proceso y cualquier temporizador.
+        if self.debounce_timer:
+            self.debounce_timer.cancel()
+        if self.process:
+            self.console.print("[bold red]Terminating process before exit...[/bold red]")
+            self.stop_process()
 
 if __name__ == "__main__":
-    project_name = os.path.basename(os.getcwd())
-    path = f"../{project_name}"  # Directorio a monitorear
-    command = "python bot.py"  # El comando para ejecutar tu bot
+    root_path = os.getcwd()  # Monitorear toda la carpeta raíz del proyecto
+    command = "python security_bot.py"  # Comando para ejecutar el bot
 
-    event_handler = ChangeHandler(command)
+    event_handler = ChangeHandler(command, root_path)
 
-    # Iniciar el proceso al comenzar
+    # Inicializar hash del proyecto
+    event_handler.last_hash = event_handler.calculate_directory_hash()
+
+    # Iniciar el bot
     event_handler.start_process()
 
-    # Espera a que el proceso esté en ejecución antes de empezar a monitorear
     observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
+    observer.schedule(event_handler, root_path, recursive=True)  # Monitorear recursivamente todo el directorio
     observer.start()
 
     console = Console()
     try:
-        console.print("[bold green]Monitoring for changes...[/bold green]")
+        console.print(f"[bold green]Monitoring for changes in: {root_path}...[/bold green]")
         while True:
-            time.sleep(1)  # Mantener el proceso principal activo para el observador
+            time.sleep(1)  # Mantener el programa corriendo
     except KeyboardInterrupt:
         observer.stop()
-        if event_handler.process:
-            event_handler.process.terminate()
-            event_handler.process.wait()
+        event_handler.stop()
         console.print("[bold red]Monitoring stopped by user.[/bold red]")
 
     observer.join()
+
 
 """),
            
