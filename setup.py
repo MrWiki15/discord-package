@@ -11,12 +11,17 @@ setup(
         ],
     },
     install_requires=[
-        'discord.py',  # Añade aquí cualquier otra dependencia necesaria
+        'discord.py',
+        'watchdog',
+        'asyncio',
+        'datetime',
+        'requests',
+        'rich',
     ],
-    description='Un empaquetador para crear bots de Discord fácilmente',
+    description='A packager to create Discord bots easily',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/MrWiki15/discord-package',  # Cambia esto a la URL de tu repositorio
+    url='https://github.com/MrWiki15/discord-package', 
     author='Polaris Web3',
     author_email='universe@polarisweb3.org',
     classifiers=[
