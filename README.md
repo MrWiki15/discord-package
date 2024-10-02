@@ -1,46 +1,53 @@
-# Discord Package - Empaquetador de Bots de Discord
+# Discord Package - Discord Bots Packager
 
-## Descripción
+## Description
 
-**Discord Package** es una herramienta de línea de comandos para crear y gestionar bots de Discord en Python. Además, incluye un monitor web simple para ver los logs del bot en tiempo real, permitiendo una mejor visualización y depuración.
+**Discord Package** is a command line tool for creating and managing Discord bots in Python `(currently in BETA)`. It also includes a simple web monitor to view bot logs in real time, allowing for better visualization and debugging.
 
-## Características
+## Features
 
-- **Generación de proyectos de bots de Discord**: Crea rápidamente un nuevo proyecto de bot con la estructura de archivos y carpetas necesaria.
-- **Monitorización de logs en tiempo real**: Un servidor web incorporado que muestra los logs del bot en tiempo real en una interfaz web.
-- **Filtros avanzados**: Filtra los logs por nombre de servidor, ID del servidor, nombre de usuario y fecha para facilitar la depuración.
+- **Discord bot project generation**: Quickly creates a new bot project with the necessary file and folder structure.
+- **Refresh**: The packer is constantly watching for changes in the working directory and will restart the bot if any changes are detected.
+- **Real-time log monitoring**: A built-in web server that displays the bot logs in real time in a web interface.
+- **Advanced filters**: Filter logs by server name, server ID, user name and date for easy debugging.
 
-## Requisitos
+## Requirements
 
-- Python 3.6 o superior.
-- Dependencias adicionales: `discord.py`, `watchdog`, `asyncio`, `datetime`, `requests`, `rich`.
+- Python 3.6 or higher.
+- Additional dependencies: `discord.py`, `watchdog`, `asyncio`, `datetime`, `requests`, `rich`.
 
-## Instalación
+## Installation
 
-### 1. Instala discord-package
+### 1. Install discord-package
 
 ```bash
 pip install discord-package
 ```
 
-## Uso
+### 2. Install dependencies
 
-### Crear un Nuevo Proyecto de Bot
+```bash
+pip install -r requirements.txt
+```
 
-Para crear un nuevo proyecto de bot de Discord, utiliza el siguiente comando:
+## Usage
+
+### Create a New Bot Project
+
+To create a new Discord bot project, use the following command:
 
 ```bash
 dcp create <nombre_del_proyecto>
 ```
 
-Reemplaza `<nombre_del_proyecto>` con el nombre que desees para tu nuevo proyecto. Este comando creará una estructura de proyecto con todos los archivos y carpetas necesarios.
+Replace `<project_name>` with the name you want for your new project. This command will create a project structure with all necessary files and folders.
 
-## Estructura del Proyecto
+## Project Structure
 
-El comando `create` generará una estructura de proyecto similar a la siguiente:
+The `create` command will generate a project structure similar to the following:
 
 ```markdown
-nombre_del_proyecto/
+project_name/
 │
 ├── assets/
 │ ├── imagen/
@@ -76,14 +83,22 @@ nombre_del_proyecto/
 └── .gitignore
 ```
 
-## Ejecutar el Bot y el Monitor Web
-
-Para iniciar el bot de Discord y el servidor web de monitorización:
+## Running the Bot in development mode
 
 ```bash
 python dev.py
 ```
 
-Para mas informacion: [Documentacion](https://docs.polarisweb3.org)
+## Running the Bot in production mode
+
+```bash
+python bot.py
+```
+
+# Disclaimer
+
+Discord Package is not an official Discord product. It is a tool created by Polaris Web3 to help developers create and manage Discord bots easily.
+
+For more information: [Documentation](https://docs.polarisweb3.org)
 
 ![Polaris](https://cusoft.tech/wp-content/uploads/2024/05/P001.svg)
